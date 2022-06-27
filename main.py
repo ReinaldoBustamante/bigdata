@@ -1,43 +1,33 @@
-import pandas as pd
-import time
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-import random as rd
+from sklearn.linear_model import LogisticRegression
+from sklearn import datasets
+from sklearn.inspection import DecisionBoundaryDisplay
+import time
+
 start = time.time()
+iris = datasets.load_breast_cancer()
+X = iris.data[:, :2][:569]
+Y = iris.target[:569]
 
-url = "http://archive.ics.uci.edu/ml/machine-learning-databases/00267/data_banknote_authentication.txt"
+mymodel = LogisticRegression(C=1e5)
+mymodel.fit(X, Y)
 
-df = pd.read_csv(url, names=['variance','skewness','curtosis','entropy','target'], nrows=1372) #Cambiar nrows para modificar cantidad datos.
+_, ax = plt.subplots(figsize=(6, 4))
+DecisionBoundaryDisplay.from_estimator(
+    mymodel,
+    X,
+    cmap=plt.cm.Paired,
+    ax=ax,
+    response_method="predict",
+    plot_method="pcolormesh",
+    shading="auto",
+    eps=0.5,
+    xlabel= 'radius',
+    ylabel= 'texture'
+)
 
-features = ['variance','skewness','curtosis','entropy']
-x = df.loc[:, features].values
-#print(x)
-#print(y)
-
-y = df.loc[:,['target']].values
-x = StandardScaler().fit_transform(x)
-
-pca = PCA(n_components=2)
-principalComponents = pca.fit_transform(x)
-principalDf = pd.DataFrame(data = principalComponents
-             , columns = ['principal component 1', 'principal component 2'])
-
-finalDf = pd.concat([principalDf, df[['target']]], axis = 1)
-
-plt.figure(figsize=(8, 8))
-
-targets = [0, 1]
-colors = ['r', 'g']
-for target, color in zip(targets, colors):
-    indicesToKeep = finalDf['target'] == target
-    plt.scatter(finalDf.loc[indicesToKeep, 'principal component 1']
-               , finalDf.loc[indicesToKeep, 'principal component 2']
-               , c = color
-               , s = 50)
-plt.grid()
-plt.legend(targets)
-plt.savefig('pca_model.png')
+plt.scatter(X[:, 0], X[:, 1], c=Y, edgecolors="k", cmap=plt.cm.Paired)
+plt.savefig("log_model.png")
 
 end=time.time()
 
